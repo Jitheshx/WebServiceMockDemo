@@ -9,28 +9,88 @@ import XCTest
 @testable import WebServiceMockDemo
 
 final class WebServiceMockDemoTests: XCTestCase {
-
+    
+    //1
+    var sut: NetworkClient!
+    //2
+    var mockSession: MockURLSession!
+    
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        
     }
-
+    
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        sut = nil
+        mockSession = nil
+        super.tearDown()
     }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    
+    private func loadJsonData(file: String) -> Data? {
+        //1
+        if let jsonFilePath = Bundle(for: type(of:  self)).path(forResource: file, ofType: "json") {
+            let jsonFileURL = URL(fileURLWithPath: jsonFilePath)
+            //2
+            if let jsonData = try? Data(contentsOf: jsonFileURL) {
+                return jsonData
+            }
+        }
+        //3
+        return nil
     }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    
+    private func createMockSession(fromJsonFile file: String,
+                                   andStatusCode code: Int,
+                                   andError error: Error?) -> MockURLSession? {
+        
+        //1
+        let data = loadJsonData(file: file)
+        //2
+        let response = HTTPURLResponse(url: URL(string: "TestUrl")!, statusCode: code, httpVersion: nil, headerFields: nil)
+        //3
+        return MockURLSession(completionHandler: (data, response, error))
+    }
+    
+    //1
+    func testNetworkClient_successResult() {
+        mockSession = createMockSession(fromJsonFile: "Search",
+                                        andStatusCode: 200, andError: nil)
+        sut = NetworkClient(withSession: mockSession)
+        sut.searchItunes(url: URL(string: "TestUrl")!) { (trackStore, errorMessage) in
+            XCTAssertNotNil(trackStore)
+            XCTAssertNil(errorMessage)
+            XCTAssertTrue(trackStore?.results?.count == 1)
+            let track = trackStore?.results?.first!
+            XCTAssertTrue(track?.artistName == "The Prodigy")
         }
     }
-
+    //2
+    func testNetworkClient_404Result() {
+        mockSession = createMockSession(fromJsonFile: "Search", andStatusCode: 404, andError: nil)
+        sut = NetworkClient(withSession: mockSession)
+        sut.searchItunes(url: URL(string: "TestUrl")!) { (trackStore, errorMessage) in
+            XCTAssertNotNil(errorMessage)
+            XCTAssertNil(trackStore)
+            XCTAssertTrue(errorMessage == "Bad Url")
+        }
+    }
+    //3
+    func testNetworkClient_NoData() {
+        mockSession = createMockSession(fromJsonFile: "A", andStatusCode: 500, andError: nil)
+        sut = NetworkClient(withSession: mockSession)
+        sut.searchItunes(url: URL(string: "TestUrl")!) { (trackStore, errorMessage) in
+            XCTAssertNotNil(errorMessage)
+            XCTAssertNil(trackStore)
+            XCTAssertTrue(errorMessage == "No Data")
+        }
+    }
+    //4
+    func testNetworkClient_AnotherStatusCode() {
+        mockSession = createMockSession(fromJsonFile: "Search", andStatusCode: 401, andError: nil)
+        sut = NetworkClient(withSession: mockSession)
+        sut.searchItunes(url: URL(string: "TestUrl")!) { (trackStore, errorMessage) in
+            XCTAssertNotNil(errorMessage)
+            XCTAssertNil(trackStore)
+            XCTAssertTrue(errorMessage == "statusCode: 401")
+        }
+    }
 }

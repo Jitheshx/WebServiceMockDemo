@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "2E20BFCA-BC70-411A-AD95-29BB873968C6",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:WebServiceMockDemo.xcodeproj",
+      "identifier" : "0BBC0DD72A32F8A60094657C",
+      "name" : "WebServiceMockDemo"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:WebServiceMockDemo.xcodeproj",
+        "identifier" : "0BBC0DED2A32F8A80094657C",
+        "name" : "WebServiceMockDemoTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:WebServiceMockDemo.xcodeproj",
+        "identifier" : "0BBC0DF72A32F8A80094657C",
+        "name" : "WebServiceMockDemoUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
